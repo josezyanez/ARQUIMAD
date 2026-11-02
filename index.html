@@ -16,8 +16,8 @@ body.signed-in #loginScreen{display:none}
 .login-card{width:min(430px,100%);padding:32px;background:white;border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 60px #19362e10}
 .login-card .brand{display:block;margin-bottom:35px}.login-card form{padding:0}.login-card h1{font-size:27px}.login-card label{margin-top:17px}.login-card p{font-size:12px}.login-card button[type=submit]{width:100%;margin-top:23px}.auth-message{min-height:36px;padding-top:14px;font-size:12px;white-space:pre-line}.auth-message.error{color:#a12d31}.login-note{border-top:1px solid var(--line);padding-top:17px;margin-top:20px!important}
 #accountBar{margin:0 0 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 15px;background:#fff;border:1px solid var(--line);border-radius:8px;font-size:11px}#liveStatus{color:var(--muted)}
-</style></head>
-<body><section id="loginScreen" aria-labelledby="loginTitle"><div class="login-card"><div class="brand">ARQUIMAD<small>ESPACIO DE TRABAJO PRIVADO</small></div><div class="eyebrow">BIENVENIDO</div><h1 id="loginTitle">Tu espacio de trabajo.</h1><p>Ingresa con tu cuenta autorizada para continuar.</p><form id="loginForm"><label>Correo electrónico<input type="email" id="loginEmail" autocomplete="username" required maxlength="254" placeholder="tu@correo.com"></label><label>Contraseña<input type="password" id="loginPassword" autocomplete="current-password" required></label><button type="submit" class="primary" id="loginSubmit">Entrar a ARQUIMAD</button><div id="authMessage" class="auth-message" role="status" aria-live="polite"></div></form><p class="login-note">Acceso por autorización. Si tu cuenta aún no está activada o necesitas recuperar tu acceso, contacta al administrador. Tu contraseña se envía únicamente al servicio de autenticación.</p></div></section>
+</style><style>.password-field{position:relative;margin-top:6px}.login-card .password-field input{margin-top:0;padding-right:52px}.password-field button{position:absolute;right:3px;top:3px;bottom:3px;width:44px;border:0;border-radius:6px;background:transparent;color:var(--green);display:grid;place-items:center}.password-field button:hover{background:#eef3e7}</style></head>
+<body><section id="loginScreen" aria-labelledby="loginTitle"><div class="login-card"><div class="brand">ARQUIMAD<small>ESPACIO DE TRABAJO PRIVADO</small></div><div class="eyebrow">BIENVENIDO</div><h1 id="loginTitle">Tu espacio de trabajo.</h1><p>Ingresa con tu cuenta autorizada para continuar.</p><form id="loginForm"><label>Correo electrónico<input type="email" id="loginEmail" autocomplete="username" required maxlength="254" placeholder="tu@correo.com"></label><label>Contraseña<div class="password-field"><input type="password" id="loginPassword" autocomplete="current-password" required><button type="button" id="togglePassword" aria-label="Mostrar contraseña" aria-controls="loginPassword" aria-pressed="false" title="Mostrar contraseña"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path id="eyeSlash" d="m3 3 18 18" style="display:none"/></svg></button></div></label><button type="submit" class="primary" id="loginSubmit">Entrar a ARQUIMAD</button><div id="authMessage" class="auth-message" role="status" aria-live="polite"></div></form><p class="login-note">Acceso por autorización. Si tu cuenta aún no está activada o necesitas recuperar tu acceso, contacta al administrador. Tu contraseña se envía únicamente al servicio de autenticación.</p></div></section>
 <aside><div class="brand">ARQUIMAD<small>DISEÑO · GESTIÓN · PRECISIÓN</small></div><div class="workspace"><div class="monogram">A</div><div><strong>Espacio ARQUIMAD</strong><small>Portal de administración</small></div></div><nav aria-label="Navegación principal"><div class="nav-label">ESPACIO DE TRABAJO</div><button data-page="home" class="active"><span>▦</span>Vista general</button><button data-page="materials"><span>▤</span>Materiales</button><button data-page="suppliers"><span>◇</span>Proveedores</button><button data-page="projects"><span>▱</span>Proyectos</button><div class="nav-label">ADMINISTRACIÓN</div><button data-page="personal"><span>◉</span>Gastos personales</button><button data-page="business"><span>▣</span>Gastos de empresa</button></nav><div class="aside-bottom"><span class="dot"></span>Primera versión visual<br><br>Un espacio para diseñar.<br>Una base para crecer.</div></aside>
 <main><header class="topbar"><span class="mobile-brand">ARQUIMAD</span><div class="breadcrumb">Espacio de trabajo <span style="margin:0 12px">/</span><strong id="crumb">Vista general</strong></div><div class="top-right"><span class="pill">Vista previa · Datos de ejemplo</span><span class="avatar" aria-label="Vista de demostración">A</span></div></header>
 <div class="intro"><div><div class="eyebrow">TU ESPACIO, EN ORDEN</div><h1 id="title">Todo comienza con una buena base.</h1><p id="subtitle">Materiales, proyectos y administración en un mismo lugar.</p></div><button class="primary" id="newExpense">+ Probar registro de gasto</button></div>
@@ -74,4 +74,21 @@ document.addEventListener('click',e=>{const nav=e.target.closest('[data-page],[d
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.shortcut')){e.preventDefault();e.target.click()}});
 window.addEventListener('hashchange',()=>render(location.hash.slice(1)));render(location.hash.slice(1)||'home');
 </script>
-<script src="/auth.js" defer></script></body></html>
+<script src="/auth.js" defer></script><script>
+document.getElementById('togglePassword').addEventListener('click',()=>{
+ const input=document.getElementById('loginPassword');
+ const visible=input.type==='password';
+ input.type=visible?'text':'password';
+ const button=document.getElementById('togglePassword');
+ button.setAttribute('aria-pressed',String(visible));
+ button.setAttribute('aria-label',visible?'Ocultar contraseña':'Mostrar contraseña');
+ button.title=visible?'Ocultar contraseña':'Mostrar contraseña';
+ document.getElementById('eyeSlash').style.display=visible?'':'none';
+});
+document.getElementById('loginForm').addEventListener('submit',()=>{
+ document.getElementById('loginPassword').type='password';
+ const button=document.getElementById('togglePassword');
+ button.setAttribute('aria-pressed','false');button.setAttribute('aria-label','Mostrar contraseña');button.title='Mostrar contraseña';
+ document.getElementById('eyeSlash').style.display='none';
+});
+</script></body></html>
