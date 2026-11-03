@@ -4,12 +4,13 @@ function setup(role='admin',confirmed=true){
 const elements=new Map(),classes=new Set(),calls=[];
 function el(id){if(!elements.has(id))elements.set(id,{value:'',textContent:'',disabled:false,classList:{toggle(){}},handlers:{},addEventListener(k,f){this.handlers[k]=f}});return elements.get(id)}
 let revoked=false;
-const context={document:{getElementById:el,body:{classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}}},window:{addEventListener(){}},AbortSignal,setTimeout:()=>1,clearTimeout(){},fetch:async(url,opts)=>{
+const context={document:{addEventListener(){},getElementById:el,body:{classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)}}},window:{addEventListener(){},setCatalogState(){}},AbortSignal,setTimeout:()=>1,clearTimeout(){},fetch:async(url,opts)=>{
 calls.push({url,opts});let data;
 if(url.includes('grant_type=password'))data={access_token:'test-access',refresh_token:'test-refresh',expires_in:3600};
 else if(url.endsWith('/user'))data={email:'admin@example.invalid',email_confirmed_at:confirmed?'2026-01-01':null};
 else if(url.endsWith('/portal_session'))data={role};
 else if(url.includes('/proveedores?'))data=Array.from({length:7},(_,i)=>({id:i}));
+else if(url.includes('/precios?'))data=[];
 else if(url.endsWith('/logout')){revoked=true;data={}}
 else throw new Error('unexpected URL');
 return {ok:true,json:async()=>data};
