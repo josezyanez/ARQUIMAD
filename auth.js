@@ -15,6 +15,7 @@ async function request(path,{method='GET',body,token}={}){
 }
 function lock(text=''){
  epoch++;clearTimeout(refreshTimer);session=null;
+ window.setCatalogState({ready:false,loading:false,error:''},[],[]);
  document.body.classList.remove('signed-in');
  $('accountIdentity').textContent='';$('liveStatus').textContent='';
  $('loginPassword').value='';message(text,Boolean(text));
@@ -40,12 +41,39 @@ async function establish(data,version){
   try{await establish(await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:token}}),current)}
   catch{if(current===epoch)lock('Tu sesión terminó. Inicia sesión nuevamente.')}
  },Math.max(10000,((data.expires_in||3600)-90)*1000));
- $('liveStatus').textContent='Comprobando conexión con proveedores…';
- try{
-  const rows=await request('/rest/v1/proveedores?select=id',{token:session.access});
-  if(version===epoch)$('liveStatus').textContent='Conexión real activa · '+rows.length+' proveedores registrados. Catálogo pendiente de importar.';
- }catch{if(version===epoch)$('liveStatus').textContent='Acceso autorizado. No se pudo consultar el catálogo; vuelve a entrar para reintentar.'}
+ await loadCatalog(version);
+
 }
+
+let loadingVersion=null;
+async function loadCatalog(version=epoch){
+ if(!session||loadingVersion===version)return;
+ loadingVersion=version;
+ const access=session.access;
+ window.setCatalogState({ready:false,loading:true,error:''},[],[]);
+ $('liveStatus').textContent='Cargando materiales y proveedores…';
+ try{
+  const suppliers=await request('/rest/v1/proveedores?select=id,nombre,nombre_comercial,observaciones&activo=eq.true&order=nombre',{token:access});
+  const prices=[];
+  for(let offset=0;;offset+=500){
+   const batch=await request('/rest/v1/precios?select=*,materiales(*),proveedores(id,nombre),fuentes(codigo_fuente,nombre,fecha_referencia,observaciones)&vigente=eq.true&order=id&limit=500&offset='+offset,{token:access});
+   if(!Array.isArray(batch))throw new Error('Respuesta de catálogo inválida');
+   prices.push(...batch);
+   if(version!==epoch)return;
+   if(batch.length<500)break;
+  }
+  if(version!==epoch)return;
+  window.setCatalogState({ready:true,loading:false,error:''},prices,suppliers);
+  $('liveStatus').textContent='Conexión real activa · '+suppliers.length+' proveedores · '+prices.length+' materiales del maestro.';
+ }catch(error){
+  if(version!==epoch)return;
+  if(error.status===401||error.status===403){lock('Tu sesión terminó. Inicia sesión nuevamente.');return;}
+  window.setCatalogState({ready:false,loading:false,error:'No se pudo cargar el catálogo. Comprueba tu conexión y vuelve a intentar.'},[],[]);
+  $('liveStatus').textContent='Catálogo sin cargar. Usa Reintentar en Materiales.';
+ }finally{if(loadingVersion===version)loadingVersion=null;}
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-retry-catalog]'))loadCatalog();});
+
 $('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();const button=$('loginSubmit');button.disabled=true;message('Verificando tu acceso…');
  const version=++epoch;
